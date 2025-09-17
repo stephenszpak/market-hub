@@ -1,0 +1,86 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: marketing_hub_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hubnet
+
+  backend:
+    build:
+      context: ./apps/backend
+    container_name: marketing_hub_backend
+    env_file:
+      - .env
+    environment:
+      MIX_ENV: dev
+      PHX_SERVER: "true"
+      PHX_PORT: 4000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./apps/backend:/app
+      - backend_build:/app/_build
+      - backend_deps:/app/deps
+    command: ["sh", "./scripts/dev.sh"]
+    networks:
+      - hubnet
+
+  frontend:
+    build:
+      context: ./apps/frontend
+    container_name: marketing_hub_frontend
+    env_file:
+      - .env
+    environment:
+      - VITE_BACKEND_URL=http://localhost:4000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/frontend:/app
+      - /app/node_modules
+    command: ["sh", "-c", "(npm ci || npm install) && npm run dev -- --host"]
+    networks:
+      - hubnet
+    depends_on:
+      - backend
+
+  scrapers:
+    build:
+      context: ./apps/scrapers
+    container_name: marketing_hub_scrapers
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/scrapers:/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    networks:
+      - hubnet
+
+volumes:
+  pgdata:
+  backend_build:
+  backend_deps:
+
+networks:
+  hubnet:
+    driver: bridge

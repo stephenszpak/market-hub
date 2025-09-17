@@ -1,0 +1,45 @@
+# marketing-hub-poc
+
+Lean monorepo proof-of-concept for a Marketing Insights Hub:
+
+- React 18 + Vite frontend
+- Phoenix 1.7 + Elixir 1.16 backend (Postgres)
+- Python 3.11 FastAPI scrapers service
+
+## Quickstart (Docker Compose)
+
+1. Copy env: `cp .env.example .env`
+2. Start services: `make up` or `./scripts/dev.sh`
+3. Open:
+   - Backend:  http://localhost:4000/health
+   - Frontend: http://localhost:5173
+   - Scrapers: http://localhost:8000/health
+
+## How to load mock Adobe data
+
+1. Place a JSONL or CSV file at the path in `ADOBE_MOCK_DATA_PATH` (default `./data/adobe/mock.jsonl`, relative to the backend container working dir `/app`).
+2. Seed the DB: `make seed` (runs `mix run priv/repo/seeds.exs`).
+
+Accepted columns for CSV/JSONL (aa_events):
+- ts (ISO8601), channel, campaign, page, region, sessions (int), conversions (int), revenue (numeric)
+
+## Repo Structure
+
+```
+marketing-hub-poc/
+  apps/
+    backend/   # Phoenix API
+    frontend/  # Vite + React
+    scrapers/  # FastAPI
+  .github/workflows/ci.yml
+  docker-compose.yml
+  Makefile
+  scripts/dev.sh
+```
+
+## Dev Tooling
+
+- Frontend: ESLint + Prettier + Jest/RTL
+- Backend: mix format + Credo + ExUnit
+- Scrapers: Ruff + Black + Pytest
+

@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #006DA8;
+  --color-link: #007ABB;
+}
+
+.dark {
+  --color-primary: #006DA8;
+  --color-link: #007ABB;
+}
+
+body {
+  @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+}
+
+a {
+  color: var(--color-link);
+}
+

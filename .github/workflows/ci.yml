@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: marketing_hub_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres -d marketing_hub_test" 
+          --health-interval=5s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.16'
+          otp-version: '26'
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/backend/deps
+            apps/backend/_build
+          key: ${{ runner.os }}-mix-${{ hashFiles('apps/backend/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - name: Install deps
+        working-directory: apps/backend
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+          mix deps.get
+      - name: Format check
+        working-directory: apps/backend
+        run: mix format --check-formatted
+      - name: Credo
+        working-directory: apps/backend
+        run: mix credo --strict
+      - name: Tests
+        env:
+          MIX_ENV: test
+          DATABASE_URL: ecto://postgres:postgres@localhost:5432/marketing_hub_test
+        working-directory: apps/backend
+        run: |
+          mix do deps.get, compile
+          mix ecto.create
+          mix ecto.migrate
+          mix test
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: apps/frontend/package-lock.json
+      - name: Install deps
+        working-directory: apps/frontend
+        run: npm ci || npm install
+      - name: Lint
+        working-directory: apps/frontend
+        run: npm run lint
+      - name: Tests
+        working-directory: apps/frontend
+        run: npm test -- --ci --watchAll=false
+
+  scrapers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install
+        working-directory: apps/scrapers
+        run: pip install .[dev]
+      - name: Lint
+        working-directory: apps/scrapers
+        run: |
+          ruff check .
+          black --check .
+      - name: Tests
+        working-directory: apps/scrapers
+        run: pytest -q

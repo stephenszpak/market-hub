@@ -1,0 +1,29 @@
+[project]
+name = "marketing-hub-scrapers"
+version = "0.1.0"
+description = "FastAPI scrapers service for Marketing Hub POC"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "requests>=2.31",
+  "beautifulsoup4>=4.12",
+  "pydantic>=2.6",
+  "APScheduler>=3.10"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.4",
+  "ruff>=0.4",
+  "black>=24.3"
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
