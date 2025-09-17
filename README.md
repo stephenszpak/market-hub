@@ -15,6 +15,12 @@ Lean monorepo proof-of-concept for a Marketing Insights Hub:
    - Frontend: http://localhost:5173
    - Scrapers: http://localhost:8000/health
 
+## OpenAI Config / Mock Mode
+
+- Set `OPENAI_API_KEY` in `.env` to enable real OpenAI responses for `/api/chat`.
+- Optional: `OPENAI_MODEL` sets the model (default `gpt-4o-mini`).
+- If `OPENAI_API_KEY` is unset, the backend serves mock streaming responses for development.
+
 ## How to load mock Adobe data
 
 1. Place a JSONL or CSV file at the path in `ADOBE_MOCK_DATA_PATH` (default `./data/adobe/mock.jsonl`, relative to the backend container working dir `/app`).
@@ -42,4 +48,3 @@ marketing-hub-poc/
 - Frontend: ESLint + Prettier + Jest/RTL
 - Backend: mix format + Credo + ExUnit
 - Scrapers: Ruff + Black + Pytest
-

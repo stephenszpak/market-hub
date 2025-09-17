@@ -32,8 +32,10 @@ defmodule Hub.MixProject do
       {:plug_cowboy, "~> 2.6"},
       {:cors_plug, "~> 3.0"},
       {:nimble_csv, "~> 1.2"},
+      {:req, "~> 0.5"},
+      {:finch, "~> 0.16"},
+      {:plug_attack, "~> 0.4"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 end
-

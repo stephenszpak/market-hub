@@ -2,7 +2,8 @@ defmodule HubWeb.Router do
   use HubWeb, :router
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug :accepts, ["json", "event-stream"]
+    plug HubWeb.Plugs.RateLimiter
   end
 
   scope "/", HubWeb do
@@ -13,8 +14,8 @@ defmodule HubWeb.Router do
   scope "/api", HubWeb do
     pipe_through :api
     post "/chat", ApiController, :chat
+    get "/chat/stream", ApiController, :chat_sse
     post "/charts", ApiController, :charts
     post "/slides", ApiController, :slides
   end
 end
-

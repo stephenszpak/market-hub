@@ -1,4 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
+import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 
 const data = [
   { name: 'Mon', sessions: 120, conversions: 12 },
@@ -11,8 +13,21 @@ const data = [
 ]
 
 export default function Charts() {
+  const loc = useLocation()
+  const [prompt, setPrompt] = useState<string>('')
+  useEffect(() => {
+    const params = new URLSearchParams(loc.search)
+    setPrompt(params.get('prompt') || '')
+  }, [loc.search])
+
   return (
     <div>
+      {prompt && (
+        <div className="mb-4 p-3 rounded border border-gray-200 dark:border-gray-800">
+          <div className="text-sm text-gray-600 dark:text-gray-400">Chart prompt:</div>
+          <div className="text-sm">{prompt}</div>
+        </div>
+      )}
       <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-primary)' }}>
         Demo Chart
       </h2>

@@ -2,10 +2,18 @@ defmodule Hub.Application do
   use Application
 
   def start(_type, _args) do
+    # ensure ETS table for rate limiting exists
+    try do
+      :ets.new(Hub.RateLimit.Storage, [:named_table, :public, :set, read_concurrency: true])
+    rescue
+      _ -> :ok
+    end
+
     children = [
       Hub.Repo,
       {Phoenix.PubSub, name: Hub.PubSub},
-      HubWeb.Endpoint
+      HubWeb.Endpoint,
+      {Finch, name: HubFinch}
     ]
 
     opts = [strategy: :one_for_one, name: Hub.Supervisor]
@@ -17,4 +25,3 @@ defmodule Hub.Application do
     :ok
   end
 end
-

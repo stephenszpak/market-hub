@@ -13,5 +13,9 @@ config :hub, HubWeb.Endpoint,
 
 config :phoenix, :json_library, Jason
 
-import_config "#{config_env()}.exs"
+# Support Server-Sent Events (SSE)
+config :mime, :types, %{
+  "text/event-stream" => ["event-stream"]
+}
 
+import_config "#{config_env()}.exs"
