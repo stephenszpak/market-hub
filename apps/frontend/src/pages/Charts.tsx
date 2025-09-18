@@ -15,16 +15,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 
-const data = [
-  { name: 'Mon', sessions: 120, conversions: 12 },
-  { name: 'Tue', sessions: 200, conversions: 18 },
-  { name: 'Wed', sessions: 150, conversions: 15 },
-  { name: 'Thu', sessions: 220, conversions: 22 },
-  { name: 'Fri', sessions: 300, conversions: 30 },
-  { name: 'Sat', sessions: 180, conversions: 16 },
-  { name: 'Sun', sessions: 140, conversions: 11 },
-]
-
 export default function Charts() {
   const loc = useLocation()
   const [prompt, setPrompt] = useState<string>('')

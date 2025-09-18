@@ -11,7 +11,7 @@ export function ChatInput({
   examplesOpen,
   anchorRef,
   onToggleContext,
-  contextOpen,
+  contextOpen: _contextOpen,
   contextAnchorRef,
 }: {
   value: string

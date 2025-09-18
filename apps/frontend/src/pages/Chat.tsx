@@ -130,7 +130,7 @@ export default function Chat() {
     plusRef.current?.focus()
   }
 
-  function useAsChartPrompt(text: string) {
+  function goToChartPrompt(text: string) {
     nav(`/charts?prompt=${encodeURIComponent(text)}`)
   }
 
@@ -157,7 +157,7 @@ export default function Chat() {
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      code({inline, className, children, ...props}) {
+                      code({inline, className: _className, children, ...props}) {
                         const text = String(children)
                         if (inline) {
                           return <code className="px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800" {...props}>{children}</code>
@@ -178,7 +178,7 @@ export default function Chat() {
               )}
               <div className="mt-2">
                 <button
-                  onClick={() => useAsChartPrompt(m.content)}
+                  onClick={() => goToChartPrompt(m.content)}
                   className="text-xs px-2 py-1 border rounded hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   Use as chart prompt

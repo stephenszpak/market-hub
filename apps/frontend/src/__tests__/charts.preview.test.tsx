@@ -1,17 +1,5 @@
 import { render } from '@testing-library/react'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-} from 'recharts'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts'
 import React from 'react'
 
 const rows = [
@@ -63,4 +51,3 @@ test('renders area chart preview', () => {
     </div>
   )
 })
-
