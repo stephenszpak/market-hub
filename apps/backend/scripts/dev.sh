@@ -20,5 +20,21 @@ done
 mix ecto.create || true
 mix ecto.migrate || true
 
+# Ensure slides worker deps (dev volume overrides build layer)
+NEED_INSTALL=0
+if [ ! -d "slides_worker/node_modules" ]; then
+  NEED_INSTALL=1
+fi
+if [ ! -d "slides_worker/node_modules/pptxgenjs" ]; then
+  NEED_INSTALL=1
+fi
+if [ ! -d "slides_worker/node_modules/pdf-lib" ]; then
+  NEED_INSTALL=1
+fi
+if [ "$NEED_INSTALL" = "1" ]; then
+  echo "Installing slides worker deps..."
+  cd slides_worker && npm install --no-audit --no-fund && cd ..
+fi
+
 echo "Starting Phoenix on :4000"
 mix phx.server

@@ -4,7 +4,7 @@ ENV LANG=C.UTF-8
 WORKDIR /app
 
 # Install build deps
-RUN apk add --no-cache build-base git openssl-dev inotify-tools netcat-openbsd
+RUN apk add --no-cache build-base git openssl-dev inotify-tools netcat-openbsd nodejs npm
 
 # Prepare mix
 RUN mix local.hex --force && mix local.rebar --force
@@ -16,6 +16,11 @@ RUN MIX_ENV=dev mix deps.get
 
 # Copy app
 COPY . .
+
+# Install slides worker deps
+WORKDIR /app/slides_worker
+RUN npm install --no-audit --no-fund
+WORKDIR /app
 
 EXPOSE 4000
 CMD ["sh", "./scripts/dev.sh"]

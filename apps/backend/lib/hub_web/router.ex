@@ -18,6 +18,8 @@ defmodule HubWeb.Router do
     post "/charts", ApiController, :charts
     post "/charts/save", ApiController, :charts_save
     get "/charts", ApiController, :charts_index
+    post "/charts/pdf", ApiController, :charts_pdf
+    post "/charts/delete", ApiController, :charts_delete
     post "/slides", ApiController, :slides
   end
 end

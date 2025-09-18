@@ -38,6 +38,7 @@ services:
     volumes:
       - ./apps/backend:/app
       - ./data:/app/data
+      - backend_node_modules:/app/slides_worker/node_modules
       - backend_build:/app/_build
       - backend_deps:/app/deps
     command: ["sh", "./scripts/dev.sh"]
@@ -81,6 +82,7 @@ volumes:
   pgdata:
   backend_build:
   backend_deps:
+  backend_node_modules:
 
 networks:
   hubnet:

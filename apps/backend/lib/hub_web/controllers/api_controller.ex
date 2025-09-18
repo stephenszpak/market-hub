@@ -132,10 +132,108 @@ defmodule HubWeb.ApiController do
   end
 
   def charts_index(conn, _params) do
-    rows = Hub.Repo.all(from c in Hub.Charts.SavedChart, order_by: [desc: c.inserted_at], select: %{id: c.id, chart_spec: c.chart_spec, inserted_at: c.inserted_at})
+    rows =
+      Hub.Repo.all(
+        from c in Hub.Charts.SavedChart,
+          order_by: [desc: c.inserted_at],
+          select: %{id: c.id, chart_spec: c.chart_spec, inserted_at: c.inserted_at}
+      )
     json(conn, %{charts: rows})
   end
-  def slides(conn, _params), do: not_implemented(conn)
+
+  def charts_delete(conn, params) do
+    with ids when is_list(ids) <- Map.get(params, "chartIds") do
+      {count, _} =
+        Hub.Repo.delete_all(
+          from c in Hub.Charts.SavedChart,
+            where: c.id in ^ids
+        )
+
+      json(conn, %{deleted: count})
+    else
+      _ -> json(conn |> put_status(400), %{error: "invalid_body"})
+    end
+  end
+
+  def charts_pdf(conn, params) do
+    with ids when is_list(ids) <- Map.get(params, "chartIds"),
+         title <- Map.get(params, "title", "Charts") do
+      charts =
+        Hub.Repo.all(
+          from c in Hub.Charts.SavedChart,
+            where: c.id in ^ids,
+            select: %{id: c.id, title: c.id, thumbnail: c.thumbnail}
+        )
+
+      case Hub.Slides.generate_pdf(%{title: title, charts: charts}) do
+        {:ok, pdf} ->
+          filename =
+            title
+            |> String.replace(~r/[^A-Za-z0-9_-]+/, "-")
+            |> String.trim("-")
+            |> Kernel.<>(".pdf")
+
+          conn
+          |> put_resp_content_type("application/pdf")
+          |> put_resp_header("content-disposition", ~s(attachment; filename="#{filename}"))
+          |> send_resp(200, pdf)
+
+        {:error, reason} ->
+          json(conn |> put_status(500), %{error: "pdf_generation_failed", reason: inspect(reason)})
+      end
+    else
+      _ -> json(conn |> put_status(400), %{error: "invalid_body"})
+    end
+  end
+  def slides(conn, params) do
+    with title when is_binary(title) <- Map.get(params, "title"),
+         ids when is_list(ids) <- Map.get(params, "chartIds") do
+      bullets = Map.get(params, "bulletsByChartId", %{})
+      date_range = Map.get(params, "dateRange")
+      brand = Map.get(params, "brand", %{})
+      save = Map.get(params, "save", false)
+
+      charts =
+        Hub.Repo.all(
+          from c in Hub.Charts.SavedChart,
+            where: c.id in ^ids,
+            select: %{id: c.id, chart_spec: c.chart_spec, thumbnail: c.thumbnail}
+        )
+
+      case Hub.Slides.generate_pptx(%{
+          title: title,
+          charts: charts,
+          bullets: bullets,
+          date_range: date_range,
+          brand: brand
+        }) do
+        {:ok, pptx} ->
+          File.mkdir_p!("priv/exports")
+          filename =
+            title
+            |> String.replace(~r/[^A-Za-z0-9_-]+/, "-")
+            |> String.trim("-")
+            |> Kernel.<>(".pptx")
+
+          if save do
+            path = Path.join(["priv", "exports", filename])
+            File.write!(path, pptx)
+          end
+
+          conn
+          |> put_resp_content_type(
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          )
+          |> put_resp_header("content-disposition", ~s(attachment; filename="#{filename}"))
+          |> send_resp(200, pptx)
+
+        {:error, reason} ->
+          json(conn |> put_status(500), %{error: "slides_generation_failed", reason: inspect(reason)})
+      end
+    else
+      _ -> json(conn |> put_status(400), %{error: "invalid_body"})
+    end
+  end
 
   defp not_implemented(conn) do
     conn

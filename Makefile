@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: up down seed test lint fmt
+.PHONY: up down seed test lint fmt nuke
 
 up:
 	docker compose up --build -d
@@ -11,6 +11,10 @@ up:
 	docker compose logs -f --tail=100
 
 down:
+	docker compose down
+
+# DANGER: Remove containers AND volumes (DB reset)
+nuke:
 	docker compose down -v
 
 seed:
