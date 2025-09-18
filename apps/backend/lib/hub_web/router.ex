@@ -16,6 +16,8 @@ defmodule HubWeb.Router do
     post "/chat", ApiController, :chat
     get "/chat/stream", ApiController, :chat_sse
     post "/charts", ApiController, :charts
+    post "/charts/save", ApiController, :charts_save
+    get "/charts", ApiController, :charts_index
     post "/slides", ApiController, :slides
   end
 end

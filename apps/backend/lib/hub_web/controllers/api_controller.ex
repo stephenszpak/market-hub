@@ -91,6 +91,38 @@ defmodule HubWeb.ApiController do
     end
   end
   def charts(conn, _params), do: not_implemented(conn)
+  def charts(conn, %{"prompt" => prompt}) when is_binary(prompt) do
+    parsed = Hub.Charts.parse_prompt(prompt)
+    rows = Hub.Charts.query_for(parsed)
+    spec = parsed.spec
+    choices = Hub.Charts.suggestions(parsed)
+
+    explanation =
+      case System.get_env("OPENAI_API_KEY") do
+        nil -> short_explanation_mock(spec)
+        api_key -> short_explanation_openai(spec, prompt, api_key)
+      end
+
+    json(conn, %{rows: rows, chart_spec: spec, choices: choices, explanation: explanation})
+  end
+  def charts(conn, _), do: json(conn |> put_status(400), %{error: "invalid_body"})
+
+  def charts_save(conn, params) do
+    with spec when is_map(spec) <- Map.get(params, "chart_spec"),
+         thumb when is_binary(thumb) <- Map.get(params, "thumbnail") do
+      meta = Map.get(params, "query_meta", %{})
+      rec = %Hub.Charts.SavedChart{chart_spec: spec, query_meta: meta, thumbnail: thumb}
+      {:ok, rec} = Hub.Repo.insert(rec)
+      json(conn, %{id: rec.id})
+    else
+      _ -> json(conn |> put_status(400), %{error: "invalid_body"})
+    end
+  end
+
+  def charts_index(conn, _params) do
+    rows = Hub.Repo.all(from c in Hub.Charts.SavedChart, order_by: [desc: c.inserted_at], select: %{id: c.id, chart_spec: c.chart_spec, inserted_at: c.inserted_at})
+    json(conn, %{charts: rows})
+  end
   def slides(conn, _params), do: not_implemented(conn)
 
   defp not_implemented(conn) do
@@ -180,6 +212,28 @@ defmodule HubWeb.ApiController do
       String.starts_with?(line, ":") -> :ignore
       line == "" -> :ignore
       true -> :ignore
+    end
+  end
+
+  defp short_explanation_mock(spec) do
+    type = spec[:type] || spec["type"]
+    x = spec[:xField] || spec["xField"]
+    ys = spec[:yFields] || spec["yFields"] || []
+    ytxt = Enum.join(ys, ", ")
+    "This #{type} chart shows #{ytxt} by #{x}. Look for spikes or dips to spot outliers and performance shifts."
+  end
+
+  defp short_explanation_openai(spec, prompt, api_key) do
+    model = System.get_env("OPENAI_MODEL", "gpt-4o-mini")
+    messages = [
+      %{role: "system", content: "You explain charts in simple, non-technical language in 2-3 sentences."},
+      %{role: "user", content: "Chart spec: " <> Jason.encode!(spec) <> "\nPrompt: " <> prompt}
+    ]
+    body = Jason.encode!(%{model: model, messages: messages, temperature: 0.3})
+    headers = [{"authorization", "Bearer #{api_key}"}, {"content-type", "application/json"}]
+    case Req.post(url: "https://api.openai.com/v1/chat/completions", headers: headers, body: body) do
+      {:ok, %Req.Response{status: 200, body: %{"choices" => [%{"message" => %{"content" => txt}} | _]}}} -> txt
+      _ -> short_explanation_mock(spec)
     end
   end
 end

@@ -21,12 +21,16 @@ defmodule Hub.Chat.PromptBuilder do
 
   defp formatting_instructions do
     """
-    You are a helpful assistant.
+    You are a helpful assistant for marketing stakeholders.
+    Use clear, non-technical language and avoid code unless the user explicitly asks for it.
+    Prefer concise insights over implementation details or libraries (no DataFrame/pandas examples unless requested).
+
     Always return your answers using Markdown formatting:
     - Use **bold** for emphasis
     - Use ### for section headers
     - Use bullet lists where appropriate
-    - Wrap code in ```language blocks
+    - Prefer small Markdown tables for simple breakdowns (e.g., Channel | Sessions | Conversions | Conv. Rate)
+    - Only include code fences if the user asked for code
     """
   end
 

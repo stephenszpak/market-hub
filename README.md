@@ -31,6 +31,13 @@ Accepted columns for CSV/JSONL (aa_events):
 
 ## Repo Structure
 
+## KPI Style Guide (Charts)
+
+- KPIs: sessions, conversions, CTR, CVR, revenue
+- Prefer concise Markdown tables; limit to essential columns
+- Keep commentary non-technical: 2–3 sentences on trends/outliers
+- Date ranges: last 7/30 days or last month unless specified
+
 ```
 marketing-hub-poc/
   apps/
