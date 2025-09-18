@@ -37,6 +37,7 @@ services:
       - "4000:4000"
     volumes:
       - ./apps/backend:/app
+      - ./data:/app/data
       - backend_build:/app/_build
       - backend_deps:/app/deps
     command: ["sh", "./scripts/dev.sh"]

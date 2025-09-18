@@ -38,7 +38,14 @@ htmlcov/
 .env.local
 *.log
 tmp/
-data/
+
+# Data (ignore by default, keep sample mocks)
+data/**
+!data/.gitkeep
+!data/adobe/
+data/adobe/**
+!data/adobe/mock.json
+!data/adobe/mock.jsonl
 
 # Editor
 .idea/
@@ -48,4 +55,3 @@ data/
 # Misc
 coverage/
 .cache/
-

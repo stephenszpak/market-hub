@@ -7,6 +7,8 @@ up:
 	@echo "Backend:  http://localhost:4000/health"
 	@echo "Frontend: http://localhost:5173"
 	@echo "Scrapers: http://localhost:8000/health"
+	@echo "--- Tailing service logs (Ctrl+C to stop) ---"
+	docker compose logs -f --tail=100
 
 down:
 	docker compose down -v
@@ -39,4 +41,3 @@ fmt:
 	docker compose run --rm frontend npm run fmt
 	# Scrapers format
 	docker compose run --rm scrapers black .
-

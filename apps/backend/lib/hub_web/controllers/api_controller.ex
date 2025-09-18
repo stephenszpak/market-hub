@@ -1,5 +1,6 @@
 defmodule HubWeb.ApiController do
   use HubWeb, :controller
+  import Ecto.Query
   alias Hub.{Repo}
   alias Hub.Queries.Query
   alias Hub.Insights.Retrieval
@@ -90,7 +91,6 @@ defmodule HubWeb.ApiController do
       _ -> json(conn |> put_status(400), %{error: "invalid_query"})
     end
   end
-  def charts(conn, _params), do: not_implemented(conn)
   def charts(conn, %{"prompt" => prompt}) when is_binary(prompt) do
     parsed = Hub.Charts.parse_prompt(prompt)
     rows = Hub.Charts.query_for(parsed)
