@@ -3,7 +3,12 @@ defmodule HubWeb.Plugs.RateLimiter do
 
   rule "throttle per ip", conn do
     ip = Tuple.to_list(conn.remote_ip) |> Enum.join(".")
-    throttle(ip, period: 60_000, limit: 30, storage: {PlugAttack.Storage.Ets, Hub.RateLimit.Storage})
+
+    throttle(ip,
+      period: 60_000,
+      limit: 30,
+      storage: {PlugAttack.Storage.Ets, Hub.RateLimit.Storage}
+    )
   end
 
   def block_action(conn, _opts) do

@@ -11,10 +11,11 @@ defmodule HubWeb.ApiController do
       system = Map.get(params, "system")
 
       mode = Retrieval.classify(question)
-      slice = case mode do
-        {:retrieval, key} -> Retrieval.retrieve_slice(key)
-        :general -> %{context_table: nil, rows_shown: [], sql_used: nil}
-      end
+      slice =
+        case mode do
+          {:retrieval, key} -> Retrieval.retrieve_slice(key)
+          :general -> %{context_table: nil, rows_shown: [], sql_used: nil}
+        end
 
       {prompt, _meta} = PromptBuilder.build(system, slice, question)
 
@@ -36,7 +37,12 @@ defmodule HubWeb.ApiController do
       end
 
       # persist
-      Repo.insert!(%Query{question: question, response: %{mode: inspect(mode), meta: slice, answer: text}})
+      Repo.insert!(
+        %Query{
+          question: question,
+          response: %{mode: inspect(mode), meta: slice, answer: text}
+        }
+      )
 
       chunk(conn, Jason.encode!(%{type: "done"}) <> "\n")
     else
@@ -49,10 +55,11 @@ defmodule HubWeb.ApiController do
       system = Map.get(params, "system")
 
       mode = Retrieval.classify(q)
-      slice = case mode do
-        {:retrieval, key} -> Retrieval.retrieve_slice(key)
-        :general -> %{context_table: nil, rows_shown: [], sql_used: nil}
-      end
+      slice =
+        case mode do
+          {:retrieval, key} -> Retrieval.retrieve_slice(key)
+          :general -> %{context_table: nil, rows_shown: [], sql_used: nil}
+        end
 
       {prompt, _meta} = PromptBuilder.build(system, slice, q)
       sys_merged = PromptBuilder.merge_system(system)
@@ -84,7 +91,12 @@ defmodule HubWeb.ApiController do
             {conn2, full}
         end
 
-      Repo.insert!(%Query{question: q, response: %{mode: inspect(mode), meta: slice, answer: text}})
+      Repo.insert!(
+        %Query{
+          question: q,
+          response: %{mode: inspect(mode), meta: slice, answer: text}
+        }
+      )
 
       sse_chunk(conn, "done", %{})
     else
@@ -166,39 +178,50 @@ defmodule HubWeb.ApiController do
     req = Finch.build(:post, url, headers, body)
 
     acc0 = %{conn: conn, buf: "", text: ""}
-    {:ok, acc} = Finch.stream(req, HubFinch, acc0, fn
-      {:status, _code}, acc -> acc
-      {:headers, _headers}, acc -> acc
-      {:data, chunk}, acc ->
-        buf = acc.buf <> chunk
-        {complete, rest} = split_lines(buf)
-        {conn, text} =
-          Enum.reduce(complete, {acc.conn, acc.text}, fn line, {c, t} ->
-            case parse_sse_data(line) do
-              {:data, "[DONE]"} -> {c, t}
-              {:data, json} ->
-                with {:ok, payload} <- Jason.decode(json),
-                     content <- get_in(payload, ["choices", Access.at(0), "delta", "content"]),
-                     true <- is_binary(content) do
-                  case sse_chunk(c, "delta", %{content: content}) do
-                    {:ok, c2} -> {c2, t <> content}
+    {:ok, acc} =
+      Finch.stream(req, HubFinch, acc0, fn
+        {:status, _code}, acc ->
+          acc
+
+        {:headers, _headers}, acc ->
+          acc
+
+        {:data, chunk}, acc ->
+          buf = acc.buf <> chunk
+          {complete, rest} = split_lines(buf)
+
+          {conn, text} =
+            Enum.reduce(complete, {acc.conn, acc.text}, fn line, {c, t} ->
+              case parse_sse_data(line) do
+                {:data, "[DONE]"} ->
+                  {c, t}
+
+                {:data, json} ->
+                  with {:ok, payload} <- Jason.decode(json),
+                       content <- get_in(payload, ["choices", Access.at(0), "delta", "content"]),
+                       true <- is_binary(content) do
+                    case sse_chunk(c, "delta", %{content: content}) do
+                      {:ok, c2} -> {c2, t <> content}
+                      _ -> {c, t}
+                    end
+                  else
                     _ -> {c, t}
                   end
-                else
-                  _ -> {c, t}
-                end
-              :ignore -> {c, t}
-            end
-          end)
 
-        %{acc | conn: conn, buf: rest, text: text}
-    end)
+                :ignore ->
+                  {c, t}
+              end
+            end)
+
+          %{acc | conn: conn, buf: rest, text: text}
+      end)
 
     {acc.conn, acc.text}
   end
 
   defp split_lines(buf) do
     parts = String.split(buf, "\n")
+    
     case Enum.split(parts, -1) do
       {init, [last]} -> {init, last}
       _ -> {parts, ""}
@@ -207,6 +230,7 @@ defmodule HubWeb.ApiController do
 
   defp parse_sse_data(line) do
     line = String.trim_leading(line)
+    
     cond do
       String.starts_with?(line, "data: ") -> {:data, String.replace_prefix(line, "data: ", "")}
       String.starts_with?(line, ":") -> :ignore
@@ -220,13 +244,18 @@ defmodule HubWeb.ApiController do
     x = spec[:xField] || spec["xField"]
     ys = spec[:yFields] || spec["yFields"] || []
     ytxt = Enum.join(ys, ", ")
+    
     "This #{type} chart shows #{ytxt} by #{x}. Look for spikes or dips to spot outliers and performance shifts."
   end
 
   defp short_explanation_openai(spec, prompt, api_key) do
     model = System.get_env("OPENAI_MODEL", "gpt-4o-mini")
+    
     messages = [
-      %{role: "system", content: "You explain charts in simple, non-technical language in 2-3 sentences."},
+      %{
+        role: "system",
+        content: "You explain charts in simple, non-technical language in 2-3 sentences."
+      },
       %{role: "user", content: "Chart spec: " <> Jason.encode!(spec) <> "\nPrompt: " <> prompt}
     ]
     body = Jason.encode!(%{model: model, messages: messages, temperature: 0.3})

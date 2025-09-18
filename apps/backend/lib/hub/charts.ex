@@ -13,6 +13,7 @@ defmodule Hub.Charts do
 
   def parse_prompt(prompt) when is_binary(prompt) do
     p = String.downcase(prompt)
+
     entity =
       cond do
         String.contains?(p, "campaign") -> :campaign
@@ -48,13 +49,23 @@ defmodule Hub.Charts do
       timeseries: timeseries
     }
 
-    %{entity: entity, y_fields: y_fields, date_range: date_range, timeseries: timeseries, spec: spec}
+    %{
+      entity: entity,
+      y_fields: y_fields,
+      date_range: date_range,
+      timeseries: timeseries,
+      spec: spec
+    }
   end
 
   def query_for(%{entity: entity, y_fields: y_fields, date_range: date_range, timeseries: ts}) do
     since =
       case date_range do
-        {:days, n} -> DateTime.utc_now() |> DateTime.add(-n * 24 * 60 * 60, :second) |> DateTime.truncate(:second)
+        {:days, n} ->
+          DateTime.utc_now()
+          |> DateTime.add(-n * 24 * 60 * 60, :second)
+          |> DateTime.truncate(:second)
+
         {:last_month} ->
           now = Date.utc_today()
           first_this = Date.beginning_of_month(now)

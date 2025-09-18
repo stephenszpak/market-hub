@@ -9,6 +9,7 @@ defmodule Hub.Insights.Retrieval do
   """
   def classify(question) when is_binary(question) do
     q = String.downcase(question)
+
     if mentions_any?(q, ["campaign", "channel", "region", "sessions", "conversions", "revenue"]) do
       cond do
         String.contains?(q, "campaign") -> {:retrieval, :campaign}
@@ -46,9 +47,9 @@ defmodule Hub.Insights.Retrieval do
 
     rows = Repo.all(query)
 
-    sql = "select #{group_key}, sum(sessions), sum(conversions), sum(revenue) from aa_events where ts > now() - interval '30 days' group by 1 order by 2 desc limit 20"
+    sql =
+      "select #{group_key}, sum(sessions), sum(conversions), sum(revenue) from aa_events where ts > now() - interval '30 days' group by 1 order by 2 desc limit 20"
 
     %{context_table: "aa_events", rows_shown: rows, sql_used: sql}
   end
 end
-

@@ -20,9 +20,13 @@ defmodule Hub.ChartsTest do
   end
 
   test "query_for aggregates when not timeseries" do
-    parsed = %{entity: :channel, y_fields: ["sessions", "conversions"], date_range: {:days, 30}, timeseries: false}
+    parsed = %{
+      entity: :channel,
+      y_fields: ["sessions", "conversions"],
+      date_range: {:days, 30},
+      timeseries: false
+    }
     rows = Charts.query_for(parsed)
     assert Enum.any?(rows, &(&1.group == "Email"))
   end
 end
-
